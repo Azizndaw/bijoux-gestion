@@ -1673,7 +1673,20 @@ tr:hover td {
 
 @media (max-width: 768px) {
   .quick-actions {
-    display: none !important;
+    display: flex !important;
+    gap: 8px;
+  }
+
+  .btn-quick span {
+    display: none;
+  }
+
+  .btn-quick {
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    border-radius: 50%;
   }
 
   .sidebar {
