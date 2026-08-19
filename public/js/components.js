@@ -46,16 +46,6 @@ const Components = {
           <span class="metric-value">${this.formatFCFA(k.totalExpenses)}</span>
           <span class="metric-subtext">Frais d'exploitation</span>
         </div>
-        <div class="metric-card purchases">
-          <span class="metric-label">Achats Fournisseurs</span>
-          <span class="metric-value">${this.formatFCFA(k.totalPurchases)}</span>
-          <span class="metric-subtext">Stock acheté</span>
-        </div>
-        <div class="metric-card debts">
-          <span class="metric-label">Dettes Fournisseurs</span>
-          <span class="metric-value">${this.formatFCFA(k.supplierOutstanding)}</span>
-          <span class="metric-subtext">Reste à payer</span>
-        </div>
       </div>
 
       <!-- Objectifs -->
