@@ -1,5 +1,5 @@
 const express = require('express');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const path = require('path');
 const crypto = require('crypto');
 const db = require('./db');
@@ -20,11 +20,11 @@ function verifyPassword(password, hash) {
 // Config Express
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-    secret: 'bijoux_secret_key_67890',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 heures
+app.use(cookieSession({
+    name: 'bijoux_session',
+    keys: [process.env.SESSION_SECRET || 'bijoux_session_key'],
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'lax'
 }));
 
 // Middlewares d'autorisation
@@ -72,19 +72,20 @@ function setupDefaultUsers() {
         console.log("Utilisateurs par défaut créés.");
     }
 }
-setupDefaultUsers();
+function initializeData() {
+    setupDefaultUsers();
 
-// Auto-correction des soldes de caisse vides au démarrage
-db.transaction(() => {
-    const cashAccounts = db.find('cash_accounts');
-    const cashMovements = db.find('cash_movements');
-    for (const acc of cashAccounts) {
-        const accMovements = cashMovements.filter(m => m.accountId === acc.id);
-        if (accMovements.length === 0 && acc.balance !== 0) {
-            db.update('cash_accounts', acc.id, { balance: 0 });
+    db.transaction(() => {
+        const cashAccounts = db.find('cash_accounts');
+        const cashMovements = db.find('cash_movements');
+        for (const acc of cashAccounts) {
+            const accMovements = cashMovements.filter(m => m.accountId === acc.id);
+            if (accMovements.length === 0 && acc.balance !== 0) {
+                db.update('cash_accounts', acc.id, { balance: 0 });
+            }
         }
-    }
-});
+    });
+}
 
 // Endpoint d'authentification
 app.post('/api/auth/login', (req, res) => {
@@ -109,12 +110,8 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            return res.status(500).json({ error: 'Impossible de se déconnecter' });
-        }
-        res.json({ success: true });
-    });
+    req.session = null;
+    res.json({ success: true });
 });
 
 app.get('/api/auth/me', (req, res) => {
@@ -1473,7 +1470,11 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// Router listen
-app.listen(PORT, () => {
-    console.log(`Le serveur tourne sur http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    initializeData();
+    app.listen(PORT, () => {
+        console.log(`Le serveur tourne sur http://localhost:${PORT}`);
+    });
+}
+
+module.exports = { app, initializeData };

@@ -49,16 +49,22 @@ class JSONRelationalDB {
     this.data = null;
     this.backupState = null;
     this.transactionDepth = 0;
+    this.remoteMode = process.env.NETLIFY === 'true' || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+    this.dirty = false;
   }
 
   init() {
     if (!fs.existsSync(DB_DIR)) {
-      fs.mkdirSync(DB_DIR, { recursive: true });
+      if (!this.remoteMode) {
+        fs.mkdirSync(DB_DIR, { recursive: true });
+      }
     }
 
     if (!fs.existsSync(DB_FILE)) {
       this.data = JSON.parse(JSON.stringify(DEFAULT_SCHEMA));
-      this.save();
+      if (!this.remoteMode) {
+        this.save();
+      }
     } else {
       try {
         const fileContent = fs.readFileSync(DB_FILE, 'utf8');
@@ -78,9 +84,29 @@ class JSONRelationalDB {
   }
 
   save() {
+    if (this.remoteMode) {
+      this.dirty = true;
+      return;
+    }
+
     if (this.transactionDepth === 0) {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf8');
     }
+  }
+
+  setRemoteData(data) {
+    this.remoteMode = true;
+    this.data = JSON.parse(JSON.stringify(data || DEFAULT_SCHEMA));
+    for (const key in DEFAULT_SCHEMA) {
+      if (this.data[key] === undefined) {
+        this.data[key] = JSON.parse(JSON.stringify(DEFAULT_SCHEMA[key]));
+      }
+    }
+    this.dirty = false;
+  }
+
+  getSnapshot() {
+    return JSON.parse(JSON.stringify(this.data));
   }
 
   // Transactions
