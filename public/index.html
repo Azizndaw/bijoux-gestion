@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BijouxManager — Gestion Commerciale & Comptabilité</title>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="C:/Users/user/.gemini/antigravity/scratch/bijoux-gestion/public/css/style.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <div id="app-root">
+
+    <!-- AUTHENTICATION VIEW CONTAINER -->
+    <div id="auth-container" style="display: none;">
+      <div class="auth-card">
+        <div class="auth-header">
+          <i class="fa-solid fa-gem" style="font-size: 48px; color: var(--primary); margin-bottom: 12px;"></i>
+          <h1>BijouxManager</h1>
+          <p>Gestion Commerciale & Comptabilité</p>
+        </div>
+        <form class="auth-form" id="login-form" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <label for="login-username">Nom d'utilisateur</label>
+            <input type="text" id="login-username" placeholder="Ex: admin" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Mot de passe</label>
+            <input type="password" id="login-password" placeholder="••••••••" required>
+          </div>
+          <div id="login-error-msg" style="color: var(--crimson); font-size: 13px; margin-bottom: 15px; display: none;">
+          </div>
+          <button type="submit" class="btn-auth" id="btn-login-submit">Se connecter</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="main-app" style="display: flex; width: 100vw; min-height: 100vh;">
+
+      <!-- SIDEBAR NAVIGATION -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <div class="logo-text">Bijoux<span class="logo-dot">Manager</span></div>
+        </div>
+        <nav class="sidebar-menu">
+          <div class="menu-section-header">Opérations</div>
+          <a class="menu-item active" data-page="dashboard"><i class="fa-solid fa-chart-pie"></i><span>Tableau de
+              bord</span></a>
+          <a class="menu-item" data-page="pos"><i class="fa-solid fa-cash-register"></i><span>Caisse (POS)</span></a>
+          <a class="menu-item" data-page="sales"><i class="fa-solid fa-receipt"></i><span>Ventes</span></a>
+          <a class="menu-item" data-page="purchases"><i class="fa-solid fa-truck-ramp-box"></i><span>Achats &
+              Dettes</span></a>
+          <a class="menu-item" data-page="stock"><i class="fa-solid fa-boxes-stacked"></i><span>Stocks &
+              Inventaire</span></a>
+
+          <div class="menu-section-header">Tiers & Finances</div>
+          <a class="menu-item" data-page="customers"><i class="fa-solid fa-users"></i><span>Clients</span></a>
+          <a class="menu-item" data-page="suppliers"><i class="fa-solid fa-handshake"></i><span>Fournisseurs</span></a>
+          <a class="menu-item" data-page="expenses"><i
+              class="fa-solid fa-file-invoice-dollar"></i><span>Dépenses</span></a>
+          <a class="menu-item" data-page="treasury"><i class="fa-solid fa-wallet"></i><span>Trésorerie</span></a>
+
+          <div class="menu-section-header">Analyses & Outils</div>
+          <a class="menu-item" data-page="reports"><i class="fa-solid fa-chart-line"></i><span>Rapports &
+              Objectifs</span></a>
+          <a class="menu-item" data-page="audit"><i class="fa-solid fa-clock-rotate-left"></i><span>Historique
+              d'audit</span></a>
+          <a class="menu-item" data-page="settings"><i class="fa-solid fa-gears"></i><span>Paramètres</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-snippet">
+            <span class="user-name" id="current-user-name">Chargement...</span>
+            <span class="user-role" id="current-user-role">Rôle</span>
+          </div>
+          <i class="fa-solid fa-right-from-bracket btn-logout" id="btn-logout-sidebar" title="Se déconnecter"></i>
+        </div>
+      </aside>
+
+      <!-- MAIN WRAPPER -->
+      <div class="main-wrapper">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+          <button id="mobile-menu-toggle" class="btn-icon"
+            style="display: none; padding: 6px; font-size: 20px; color: var(--primary);"><i
+              class="fa-solid fa-bars"></i></button>
+          <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="global-search"
+              placeholder="Rechercher produit, client, vente, référence...">
+            <div class="search-results-dropdown" id="search-results"></div>
+          </div>
+
+          <div class="topbar-actions">
+            <!-- Notification Bell -->
+            <div style="position: relative;">
+              <div class="alert-bell" id="bell-icon">
+                <i class="fa-regular fa-bell"></i>
+                <div class="alert-badge" id="bell-badge" style="display: none;"></div>
+              </div>
+
+              <!-- Notifications Panel -->
+              <div class="notifications-panel" id="bell-panel">
+                <div class="notifications-header">
+                  <span>Alertes et Notifications</span>
+                  <i class="fa-solid fa-times" id="btn-close-bell" style="cursor: pointer;"></i>
+                </div>
+                <div class="notifications-list" id="bell-list">
+                  <div class="notification-empty">Aucune alerte active</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="quick-actions">
+              <button class="btn-quick" id="quick-sale-btn"><i class="fa-solid fa-cart-plus"></i> Vente</button>
+              <button class="btn-quick" id="quick-expense-btn"><i class="fa-solid fa-minus"></i> Dépense</button>
+            </div>
+          </div>
+        </header>
+
+        <!-- APP CONTENT ROOT -->
+        <main class="app-content" id="content-area">
+          <!-- Les pages seront injectées dynamiquement par le routeur JS -->
+        </main>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       MODALS DIALOGS
+       ========================================================================== -->
+
+  <!-- MODAL: AJOUTER / MODIFIER PRODUIT -->
+  <div class="modal" id="modal-product">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="product-modal-title">Nouveau bijou</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="product-form">
+        <div class="modal-body">
+          <input type="hidden" id="product-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-name">Nom du bijou *</label>
+              <input type="text" id="prod-name" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label for="prod-category">Catégorie *</label>
+              <select id="prod-category" class="form-select" required></select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-material">Matière</label>
+              <input type="text" id="prod-material" class="form-input" placeholder="Ex: Or 18k, Argent 925">
+            </div>
+            <div class="form-group">
+              <label for="prod-color">Couleur</label>
+              <input type="text" id="prod-color" class="form-input" placeholder="Ex: Doré, Argenté">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-size">Taille / Dimension</label>
+              <input type="text" id="prod-size" class="form-input" placeholder="Ex: 54, 45cm">
+            </div>
+            <div class="form-group">
+              <label for="prod-brand">Marque / Collection</label>
+              <input type="text" id="prod-brand" class="form-input">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-p_price">Prix d'achat (FCFA) *</label>
+              <input type="number" id="prod-p_price" class="form-input" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="prod-s_price">Prix de vente réel (FCFA) *</label>
+              <input type="number" id="prod-s_price" class="form-input" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-qty">Quantité initiale en stock</label>
+              <input type="number" id="prod-qty" class="form-input" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="prod-min_stock">Stock d'alerte minimum</label>
+              <input type="number" id="prod-min_stock" class="form-input" min="0" value="3">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-supplier">Fournisseur</label>
+              <select id="prod-supplier" class="form-select"></select>
+            </div>
+            <div class="form-group">
+              <label for="prod-status">Statut</label>
+              <select id="prod-status" class="form-select">
+                <option value="actif">Actif</option>
+                <option value="archivé">Archivé</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="prod-desc">Description</label>
+            <textarea id="prod-desc" class="form-input"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-product').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AJOUTER DEPENSE -->
+  <div class="modal" id="modal-expense">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Enregistrer une dépense</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="expense-form">
+        <input type="hidden" id="exp-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="exp-cat">Catégorie de dépense *</label>
+            <select id="exp-cat" class="form-select" required>
+              <option value="">Sélectionner—</option>
+              <option value="Transport">Transport</option>
+              <option value="Livraison">Livraison</option>
+              <option value="Emballage">Emballage</option>
+              <option value="Publicité">Publicité</option>
+              <option value="Loyer">Loyer</option>
+              <option value="Électricité">Électricité</option>
+              <option value="Internet">Internet</option>
+              <option value="Téléphone">Téléphone</option>
+              <option value="Salaires">Salaires</option>
+              <option value="Commissions">Commissions</option>
+              <option value="Frais bancaires">Frais bancaires</option>
+              <option value="Frais Wave">Frais Wave</option>
+              <option value="Frais Orange Money">Frais Orange Money</option>
+              <option value="Achat de matériel">Achat de matériel</option>
+              <option value="Réparation">Réparation</option>
+              <option value="Autres">Autres</option>
+            </select>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="exp-amount">Montant (FCFA) *</label>
+              <input type="number" id="exp-amount" class="form-input" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="exp-method">Mode de règlement *</label>
+              <select id="exp-method" class="form-select" required>
+                <option value="Espèces">Espèces</option>
+                <option value="Wave">Wave</option>
+                <option value="Orange Money">Orange Money</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="exp-date">Date de la dépense</label>
+            <input type="date" id="exp-date" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label for="exp-desc">Description / Justification *</label>
+            <textarea id="exp-desc" class="form-input"
+              placeholder="Ex: Livraison client Fatou, recharge électricité, etc." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-expense').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AJOUTER CLIENT / SUPPLIER -->
+  <div class="modal" id="modal-people">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="people-modal-title">Nouveau Tiers</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="people-form">
+        <input type="hidden" id="people-type"> <!-- customer ou supplier -->
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="people-name">Nom complet / Raison Sociale *</label>
+            <input type="text" id="people-name" class="form-input" required>
+          </div>
+          <div class="form-group" id="people-company-group">
+            <label for="people-company">Entreprise / Société</label>
+            <input type="text" id="people-company" class="form-input">
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="people-phone">Téléphone *</label>
+              <input type="text" id="people-phone" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label for="people-email">Email</label>
+              <input type="email" id="people-email" class="form-input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="people-address">Adresse</label>
+            <input type="text" id="people-address" class="form-input">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-people').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AJOUTER ACHAT FOURNISSEUR -->
+  <div class="modal" id="modal-purchase-add">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>Enregistrer une Facture d'Achat</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="purchase-form">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="purch-supplier">Fournisseur *</label>
+              <select id="purch-supplier" class="form-select" required></select>
+            </div>
+            <div class="form-group">
+              <label for="purch-date">Date de facturation</label>
+              <input type="date" id="purch-date" class="form-input">
+            </div>
+          </div>
+
+          <!-- Section de sélection des articles à ajouter à l'achat -->
+          <div
+            style="background-color: #F8FAFC; border:1px solid var(--border); border-radius: var(--radius-md); padding:16px; margin-bottom: 20px;">
+            <h4 style="font-size: 13px; margin-bottom: 12px; color: var(--slate-light);">Ajouter un produit au panier
+              d'achat</h4>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap:12px; align-items: flex-end;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="purch-add-prod">Bijou</label>
+                <select id="purch-add-prod" class="form-select" style="width:100%;"></select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="purch-add-qty">Quantité</label>
+                <input type="number" id="purch-add-qty" class="form-input" min="1" value="1">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="purch-add-price">Prix d'achat unitaire (FCFA)</label>
+                <input type="number" id="purch-add-price" class="form-input" min="0" placeholder="Coût">
+              </div>
+              <button type="button" class="btn-primary" id="btn-purch-add-item" style="padding:10px;"><i
+                  class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+
+          <!-- Tableau récapitulatif des articles d'achat -->
+          <div class="table-wrapper"
+            style="margin-bottom: 20px; border:1px solid var(--border); border-radius: var(--radius-sm);">
+            <table id="purchase-items-table">
+              <thead>
+                <tr>
+                  <th style="padding:8px 16px;">Bijou</th>
+                  <th style="padding:8px 16px; text-align:center;">Quantité</th>
+                  <th style="padding:8px 16px; text-align:right;">Prix U. d'achat</th>
+                  <th style="padding:8px 16px; text-align:right;">Total</th>
+                  <th style="padding:8px 16px; text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="purchase-items-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); font-size:12px; padding:16px;">
+                    Aucun produit dans le panier d'achat.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="purch-paid">Montant réglé immédiatement (FCFA)</label>
+              <input type="number" id="purch-paid" class="form-input" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="purch-method">Règlement via *</label>
+              <select id="purch-method" class="form-select">
+                <option value="Espèces">Espèces</option>
+                <option value="Wave">Wave</option>
+                <option value="Orange Money">Orange Money</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="text-align: right; font-size: 15px; font-weight: 700; margin-top:10px;">
+            Total Facture: <span id="purchase-cart-total" style="color:var(--primary-dark);">0</span> FCFA
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-purchase-add').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success" id="btn-purchase-submit">Enregistrer la Facture</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CONTROLE CAISSE (OUVERTURE & CLOTURE) -->
+  <div class="modal" id="modal-caisse-action">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="caisse-action-title">Caisse</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="caisse-action-form">
+        <input type="hidden" id="caisse-action-type"> <!-- open ou close -->
+        <div class="modal-body">
+          <div id="caisse-open-fields">
+            <div class="form-group">
+              <label for="caisse-initial-bal">Solde de départ de la caisse espèces (FCFA) *</label>
+              <input type="number" id="caisse-initial-bal" class="form-input" min="0" value="0" required>
+              <div class="form-helper">Indiquez l'argent en liquide présent dans le tiroir-caisse pour démarrer la
+                journée.</div>
+            </div>
+          </div>
+          <div id="caisse-close-fields" style="display:none;">
+            <div
+              style="background-color:#F8FAFC; padding:16px; border-radius: var(--radius-md); border:1px solid var(--border); margin-bottom: 20px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span>Solde Théorique (Espèces) :</span>
+                <strong id="caisse-theoretical-bal">0 FCFA</strong>
+              </div>
+              <div class="form-helper">Ce montant est calculé automatiquement à partir de l'ouverture et des règlements
+                de la journée.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="caisse-real-bal">Solde Réellement Compté (FCFA) *</label>
+              <input type="number" id="caisse-real-bal" class="form-input" min="0" value="0">
+              <div class="form-helper">Comptez physiquement les billets et pièces dans la caisse et saisissez le
+                montant.</div>
+            </div>
+
+            <div class="form-group" id="caisse-variance-group" style="display:none;">
+              <label for="caisse-justification">Description / Justification de l'écart *</label>
+              <textarea id="caisse-justification" class="form-input"
+                placeholder="Décrivez la raison de l'écart détecté (Ex: erreur rendu monnaie, oubli saisie dépense, etc.)"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-caisse-action').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Valider</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AJOUTER OBJECTIF -->
+  <div class="modal" id="modal-goal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Définir les Objectifs Mensuels</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="goal-form">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="goal-year">Année *</label>
+              <select id="goal-year" class="form-select" required>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="goal-month">Mois *</label>
+              <select id="goal-month" class="form-select" required>
+                <option value="1">Janvier</option>
+                <option value="2">Février</option>
+                <option value="3">Mars</option>
+                <option value="4">Avril</option>
+                <option value="5">Mai</option>
+                <option value="6">Juin</option>
+                <option value="7">Juillet</option>
+                <option value="8" selected>Août</option>
+                <option value="9">Septembre</option>
+                <option value="10">Octobre</option>
+                <option value="11">Novembre</option>
+                <option value="12">Décembre</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="goal-revenue">Objectif Chiffre d'Affaires (FCFA) *</label>
+              <input type="number" id="goal-revenue" class="form-input" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="goal-profit">Objectif Bénéfice Net (FCFA)</label>
+              <input type="number" id="goal-profit" class="form-input" min="0">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-goal').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Définir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ENREGISTRER PAIEMENT / RECOUVREMENT (DETTE / CREANCE) -->
+  <div class="modal" id="modal-payment-add">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="payment-modal-title">Saisir un versement</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="payment-form">
+        <input type="hidden" id="pmt-type"> <!-- sale ou purchase -->
+        <input type="hidden" id="pmt-ref-id">
+        <div class="modal-body">
+          <div
+            style="background-color:#F8FAFC; padding:16px; border-radius: var(--radius-md); border:1px solid var(--border); margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span>Reste à payer :</span>
+              <strong id="pmt-balance-due" style="color:var(--crimson);">0 FCFA</strong>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="pmt-amount">Montant du versement (FCFA) *</label>
+            <input type="number" id="pmt-amount" class="form-input" min="1" required>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="pmt-method">Mode de règlement *</label>
+              <select id="pmt-method" class="form-select" required>
+                <option value="Espèces">Espèces</option>
+                <option value="Wave">Wave</option>
+                <option value="Orange Money">Orange Money</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="pmt-date">Date de versement</label>
+              <input type="date" id="pmt-date" class="form-input">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-payment-add').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Enregistrer le règlement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPRESSION DU RECU -->
+  <div class="modal" id="modal-receipt-view">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3>Reçu de Vente</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 10px;">
+        <div id="receipt-modal-content">
+          <!-- Chargement dynamique -->
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center; gap: 8px;">
+        <button class="btn-primary" id="btn-print-receipt-modal"><i class="fa-solid fa-print"></i> Imprimer</button>
+        <button class="btn-success" id="btn-download-pdf-receipt-modal"><i class="fa-solid fa-file-pdf"></i> Télécharger
+          PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AJUSTEMENT DE STOCK MANUEL -->
+  <div class="modal" id="modal-stock-adjust">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Correction manuelle de stock</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="stock-adjust-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="adjust-prod-id">Sélectionner le bijou *</label>
+            <select id="adjust-prod-id" class="form-select" required></select>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="adjust-type">Type d'opération *</label>
+              <select id="adjust-type" class="form-select" required>
+                <option value="entrée">Entrée (+)</option>
+                <option value="sortie">Sortie (-)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="adjust-qty">Quantité *</label>
+              <input type="number" id="adjust-qty" class="form-input" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="adjust-reason">Raison du mouvement *</label>
+            <select id="adjust-reason" class="form-select" required>
+              <option value="">Sélectionner—</option>
+              <!-- Entrées -->
+              <option value="retour client">Retour client (Entrée)</option>
+              <option value="correction manuelle">Correction manuelle (Entrée)</option>
+              <option value="inventaire">Inventaire (Entrée)</option>
+              <!-- Sorties -->
+              <option value="produit offert">Produit offert (Sortie)</option>
+              <option value="produit perdu">Produit perdu (Sortie)</option>
+              <option value="produit endommagé">Produit endommagé (Sortie)</option>
+              <option value="correction d'inventaire">Correction d'inventaire (Sortie)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="adjust-notes">Observations / Notes</label>
+            <textarea id="adjust-notes" class="form-input" placeholder="Justifiez le ajustement..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-primary"
+            style="background:#FFF; color:var(--text-main); border-color:var(--border);"
+            onclick="document.querySelector('#modal-stock-adjust').classList.remove('active')">Annuler</button>
+          <button type="submit" class="btn-success">Valider l'ajustement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- AREA FOR DIRECT BROWSER PRINTING -->
+  <div id="receipt-print-area"></div>
+
+  <!-- BACKDROP FOR MOBILE SIDEBAR DRAWER -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT SCRIPTS
+       ========================================================================== -->
+  <!-- html2pdf.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/router.js"></script>
+  <script src="./js/components.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+
+</html>

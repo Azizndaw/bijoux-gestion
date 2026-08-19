@@ -1,0 +1,17 @@
+{
+  "name": "bijoux-gestion",
+  "version": "1.0.0",
+  "description": "Logiciel professionnel de gestion commerciale et comptabilité de bijoux",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
