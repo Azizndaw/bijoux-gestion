@@ -11,7 +11,8 @@ window.appState = {
     caisseSession: null,
     treasury: { accounts: [], movements: [] },
     cart: [],
-    activePosCategory: null
+    activePosCategory: null,
+    currentProductPhotoBase64: ''
 };
 
 window.app = {
@@ -290,6 +291,33 @@ window.app = {
             this.openExpenseModal();
         });
 
+        // Gestion de la photo du produit
+        const prodImageInput = document.getElementById('prod-image');
+        const prodImagePreview = document.getElementById('prod-image-preview');
+        const btnClearProdImage = document.getElementById('btn-clear-prod-image');
+
+        if (prodImageInput && prodImagePreview && btnClearProdImage) {
+            prodImageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        window.appState.currentProductPhotoBase64 = event.target.result;
+                        prodImagePreview.innerHTML = `<img src="${window.appState.currentProductPhotoBase64}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        btnClearProdImage.style.display = 'inline-block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            btnClearProdImage.addEventListener('click', () => {
+                window.appState.currentProductPhotoBase64 = '';
+                prodImageInput.value = '';
+                prodImagePreview.innerHTML = `<i class="fa-solid fa-image" style="color: var(--text-muted); font-size: 20px;"></i>`;
+                btnClearProdImage.style.display = 'none';
+            });
+        }
+
         // Soumission du produit (création)
         document.getElementById('product-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -305,7 +333,8 @@ window.app = {
                 quantity: parseInt(document.getElementById('prod-qty').value) || 0,
                 minStock: parseInt(document.getElementById('prod-min_stock').value) || 3,
                 supplierId: parseInt(document.getElementById('prod-supplier').value) || null,
-                status: document.getElementById('prod-status').value
+                status: document.getElementById('prod-status').value,
+                photo: window.appState.currentProductPhotoBase64
             };
 
             const pId = document.getElementById('product-id').value;
@@ -626,6 +655,18 @@ window.app = {
         document.getElementById('product-id').value = '';
         document.getElementById('product-form').reset();
         document.getElementById('prod-qty').disabled = false;
+
+        window.appState.currentProductPhotoBase64 = '';
+        if (document.getElementById('prod-image')) {
+            document.getElementById('prod-image').value = '';
+        }
+        if (document.getElementById('prod-image-preview')) {
+            document.getElementById('prod-image-preview').innerHTML = `<i class="fa-solid fa-image" style="color: var(--text-muted); font-size: 20px;"></i>`;
+        }
+        if (document.getElementById('btn-clear-prod-image')) {
+            document.getElementById('btn-clear-prod-image').style.display = 'none';
+        }
+
         document.getElementById('product-modal-title').textContent = 'Ajouter un nouveau bijou';
 
         // Charger sélections fournisseurs et catégories
@@ -654,6 +695,22 @@ window.app = {
         document.getElementById('prod-supplier').value = p.supplierId || '';
         document.getElementById('prod-status').value = p.status;
         document.getElementById('prod-desc').value = p.description;
+
+        window.appState.currentProductPhotoBase64 = p.photo || '';
+        const preview = document.getElementById('prod-image-preview');
+        const clearBtn = document.getElementById('btn-clear-prod-image');
+        const fileInput = document.getElementById('prod-image');
+        if (fileInput) fileInput.value = '';
+        if (preview) {
+            if (window.appState.currentProductPhotoBase64) {
+                preview.innerHTML = `<img src="${window.appState.currentProductPhotoBase64}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                preview.innerHTML = `<i class="fa-solid fa-image" style="color: var(--text-muted); font-size: 20px;"></i>`;
+            }
+        }
+        if (clearBtn) {
+            clearBtn.style.display = window.appState.currentProductPhotoBase64 ? 'inline-block' : 'none';
+        }
 
         document.getElementById('product-modal-title').textContent = 'Modifier ' + p.name;
         document.getElementById('modal-product').classList.add('active');
@@ -889,7 +946,7 @@ window.app = {
         <div class="pos-product-card" onclick="window.app.addToCart(${p.id})">
           <span class="pos-prod-badge">${p.material || 'Bijou'}</span>
           <div class="pos-prod-image">
-            <i class="fa-solid fa-gem"></i>
+            ${p.photo ? `<img src="${p.photo}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">` : `<i class="fa-solid fa-gem"></i>`}
           </div>
           <div class="pos-prod-name" title="${p.name}">${p.name}</div>
           <div class="pos-prod-ref">${p.reference}</div>

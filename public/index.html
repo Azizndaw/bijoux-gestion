@@ -122,8 +122,10 @@
 
             <!-- Quick Action Buttons -->
             <div class="quick-actions">
-              <button class="btn-quick" id="quick-sale-btn"><i class="fa-solid fa-cart-plus"></i> <span>Vente</span></button>
-              <button class="btn-quick" id="quick-expense-btn"><i class="fa-solid fa-minus"></i> <span>Dépense</span></button>
+              <button class="btn-quick" id="quick-sale-btn"><i class="fa-solid fa-cart-plus"></i>
+                <span>Vente</span></button>
+              <button class="btn-quick" id="quick-expense-btn"><i class="fa-solid fa-minus"></i>
+                <span>Dépense</span></button>
             </div>
           </div>
         </header>
@@ -219,6 +221,21 @@
                 <option value="actif">Actif</option>
                 <option value="archivé">Archivé</option>
               </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="prod-image">Photo du bijou</label>
+              <input type="file" id="prod-image" class="form-input" accept="image/*">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
+              <div id="prod-image-preview"
+                style="width: 50px; height: 50px; border: 1px dashed var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc; flex-shrink: 0; margin-top: 15px;">
+                <i class="fa-solid fa-image" style="color: var(--text-muted); font-size: 20px;"></i>
+              </div>
+              <button type="button" id="btn-clear-prod-image" class="btn-primary"
+                style="display: none; padding: 4px 8px; font-size: 11px; margin-top: 15px; background: var(--crimson); border-color: var(--crimson); color: white;">Supprimer</button>
             </div>
           </div>
 

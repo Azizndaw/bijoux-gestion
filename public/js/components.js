@@ -227,7 +227,7 @@ const Components = {
         <div class="pos-product-card" onclick="window.app.addToCart(${p.id})">
           <span class="pos-prod-badge">${p.material || 'Bijou'}</span>
           <div class="pos-prod-image">
-            <i class="fa-solid fa-gem"></i>
+            ${p.photo ? `<img src="${p.photo}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">` : `<i class="fa-solid fa-gem"></i>`}
           </div>
           <div class="pos-prod-name" title="${p.name}">${p.name}</div>
           <div class="pos-prod-ref">${p.reference}</div>
@@ -374,8 +374,15 @@ const Components = {
         <tr>
           <td><strong style="color:var(--primary-dark);">${p.reference}</strong></td>
           <td>
-            <div style="font-weight:600; color:var(--dark-slate);">${p.name}</div>
-            <div style="font-size:11px; color:var(--text-muted);">${p.material} | ${p.color} | ${p.size}</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc; flex-shrink: 0;">
+                ${p.photo ? `<img src="${p.photo}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fa-solid fa-gem" style="color: var(--primary); font-size: 14px;"></i>`}
+              </div>
+              <div>
+                <div style="font-weight:600; color:var(--dark-slate);">${p.name}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${p.material} | ${p.color} | ${p.size}</div>
+              </div>
+            </div>
           </td>
           <td><span class="badge" style="background:#F1F5F9; color:var(--slate-medium);">${cat}</span></td>
           <td>${sup}</td>
