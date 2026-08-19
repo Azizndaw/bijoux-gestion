@@ -225,9 +225,13 @@
           </div>
 
           <div class="form-grid">
-            <div class="form-group">
-              <label for="prod-image">Photo du bijou</label>
-              <input type="file" id="prod-image" class="form-input" accept="image/*">
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-size: 13.5px; font-weight: 600; color: var(--text-main);">Photo du bijou</span>
+              <input type="file" id="prod-image" accept="image/*" style="display: none;">
+              <button type="button" class="btn-primary" onclick="document.getElementById('prod-image').click()"
+                style="background: var(--slate-medium); border-color: var(--slate-medium); color: white; display: flex; align-items: center; gap: 6px; width: fit-content; padding: 8px 16px;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Choisir une image
+              </button>
             </div>
             <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 0;">
               <div id="prod-image-preview"
