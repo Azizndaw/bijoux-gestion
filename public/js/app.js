@@ -296,17 +296,51 @@ window.app = {
         const prodImagePreview = document.getElementById('prod-image-preview');
         const btnClearProdImage = document.getElementById('btn-clear-prod-image');
 
+        // Fonction de redimensionnement et compression client-side
+        function resizeAndCompressImage(file, maxWidth, maxHeight, quality, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    callback(dataUrl);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         if (prodImageInput && prodImagePreview && btnClearProdImage) {
             prodImageInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        window.appState.currentProductPhotoBase64 = event.target.result;
+                    resizeAndCompressImage(file, 500, 500, 0.7, (compressedBase64) => {
+                        window.appState.currentProductPhotoBase64 = compressedBase64;
                         prodImagePreview.innerHTML = `<img src="${window.appState.currentProductPhotoBase64}" style="width: 100%; height: 100%; object-fit: cover;">`;
                         btnClearProdImage.style.display = 'inline-block';
-                    };
-                    reader.readAsDataURL(file);
+                    });
                 }
             });
 
@@ -321,6 +355,12 @@ window.app = {
         // Soumission du produit (création)
         document.getElementById('product-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enregistrement en cours...';
+
             const body = {
                 name: document.getElementById('prod-name').value,
                 categoryId: parseInt(document.getElementById('prod-category').value),
@@ -349,6 +389,9 @@ window.app = {
                 window.Router.navigate('stock');
             } catch (err) {
                 alert("Erreur lors de l'enregistrement : " + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         });
 
