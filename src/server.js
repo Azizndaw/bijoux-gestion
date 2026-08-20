@@ -74,6 +74,27 @@ function setupDefaultUsers() {
 }
 setupDefaultUsers();
 
+// Créer des catégories par défaut si aucune n'existe
+function setupDefaultCategories() {
+    const categories = db.find('categories');
+    if (categories.length === 0) {
+        const categoriesList = [
+            { name: 'Bagues' },
+            { name: 'Colliers' },
+            { name: 'Bracelets' },
+            { name: "Boucles d'oreilles" },
+            { name: 'Montres' },
+            { name: 'Parures' },
+            { name: 'Accessoires' }
+        ];
+        categoriesList.forEach(c => {
+            db.insert('categories', c);
+        });
+        console.log("Catégories par défaut créées.");
+    }
+}
+setupDefaultCategories();
+
 // Auto-correction des soldes de caisse vides au démarrage
 db.transaction(() => {
     const cashAccounts = db.find('cash_accounts');
