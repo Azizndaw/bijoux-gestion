@@ -95,6 +95,23 @@ function setupDefaultCategories() {
 }
 setupDefaultCategories();
 
+// Créer des fournisseurs par défaut si aucun n'existe
+function setupDefaultSuppliers() {
+    const suppliers = db.find('suppliers');
+    if (suppliers.length === 0) {
+        const suppliersList = [
+            { name: 'Modou Ndiaye', company: 'Grossiste Or Dakar', phone: '+221 77 111 22 33', email: 'modou@grossisteor.sn', address: 'Sandaga, Dakar' },
+            { name: 'Laye Sow', company: 'Bijoux Chic Paris', phone: '+33 6 12 34 56 78', email: 'laye@chicparis.fr', address: 'Paris, France' },
+            { name: 'Tidiane Kane', company: 'Importation Dubaï Prestige', phone: '+221 76 543 21 09', email: 'tidiane@dubaiimport.sn', address: 'Plateau, Dakar' }
+        ];
+        suppliersList.forEach(s => {
+            db.insert('suppliers', s);
+        });
+        console.log("Fournisseurs par défaut créés.");
+    }
+}
+setupDefaultSuppliers();
+
 // Auto-correction des soldes de caisse vides au démarrage
 db.transaction(() => {
     const cashAccounts = db.find('cash_accounts');

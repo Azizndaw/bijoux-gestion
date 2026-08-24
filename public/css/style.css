@@ -1845,3 +1845,72 @@ tr:hover td {
     font-size: 10px !important;
   }
 }
+
+/* ==========================================================================
+   CUSTOM DROP-DOWN STYLES
+   ========================================================================== */
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+}
+.custom-select-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+.custom-select-display:hover {
+  border-color: var(--primary-light);
+}
+.custom-select-options {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 250px;
+  overflow-y: auto;
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+.custom-select-wrapper.open .custom-select-options {
+  display: block;
+}
+.custom-select-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.custom-select-option:hover {
+  background-color: var(--bg-color);
+}
+.custom-select-option img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border);
+}
+.custom-select-option-text {
+  font-weight: 500;
+  color: var(--dark-slate);
+}
+.custom-select-option-ref {
+  font-size: 11px;
+  color: var(--text-muted);
+}

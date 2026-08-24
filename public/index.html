@@ -398,9 +398,19 @@
             <h4 style="font-size: 13px; margin-bottom: 12px; color: var(--slate-light);">Ajouter un produit au panier
               d'achat</h4>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap:12px; align-items: flex-end;">
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="purch-add-prod">Bijou</label>
-                <select id="purch-add-prod" class="form-select" style="width:100%;"></select>
+              <div class="form-group" style="margin-bottom:0; position: relative;">
+                <label for="purch-add-prod-wrapper">Bijou</label>
+                <div class="custom-select-wrapper" id="purch-add-prod-wrapper" tabindex="0">
+                  <div class="custom-select-display" id="purch-add-prod-display">
+                    <img id="purch-add-prod-img" src="" style="display:none; width:24px; height:24px; object-fit:cover; border-radius:4px; max-width:24px;" />
+                    <span id="purch-add-prod-text" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Choisir bijou—</span>
+                    <i class="fa-solid fa-chevron-down" style="color:var(--text-muted); font-size:12px;"></i>
+                  </div>
+                  <div class="custom-select-options" id="purch-add-prod-options">
+                    <!-- options injected via JS -->
+                  </div>
+                </div>
+                <input type="hidden" id="purch-add-prod" required>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label for="purch-add-qty">Quantité</label>

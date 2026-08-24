@@ -831,20 +831,67 @@ window.app = {
             supSelect.appendChild(opt);
         });
 
-        const prodSelect = document.getElementById('purch-add-prod');
-        prodSelect.innerHTML = '<option value="" disabled selected>Choisir bijou—</option>';
+        const purchAddProd = document.getElementById('purch-add-prod');
+        const purchAddProdWrapper = document.getElementById('purch-add-prod-wrapper');
+        const purchAddProdDisplay = document.getElementById('purch-add-prod-display');
+        const purchAddProdText = document.getElementById('purch-add-prod-text');
+        const purchAddProdImg = document.getElementById('purch-add-prod-img');
+        const purchAddProdOptions = document.getElementById('purch-add-prod-options');
+        
+        // Initialize custom dropdown reset
+        purchAddProd.value = '';
+        purchAddProdText.textContent = 'Choisir bijou—';
+        purchAddProdImg.style.display = 'none';
+        purchAddProdWrapper.classList.remove('open');
+        purchAddProdOptions.innerHTML = '';
+        
+        // Populating the custom dropdown
         window.appState.products.filter(p => p.status === 'actif').forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `${p.reference} — ${p.name}`;
-            prodSelect.appendChild(opt);
+            const optDiv = document.createElement('div');
+            optDiv.className = 'custom-select-option';
+            
+            const img = document.createElement('img');
+            img.src = p.photo || './img/gem-icon.png';
+            if(!p.photo) img.style.opacity = '0.5';
+            
+            const textDiv = document.createElement('div');
+            textDiv.style.flex = '1';
+            textDiv.innerHTML = `<div class="custom-select-option-text">${p.name}</div><div class="custom-select-option-ref">${p.reference}</div>`;
+            
+            optDiv.appendChild(img);
+            optDiv.appendChild(textDiv);
+            
+            optDiv.onclick = (e) => {
+                e.stopPropagation(); // prevent immediate close
+                purchAddProd.value = p.id;
+                purchAddProdText.textContent = p.name;
+                purchAddProdImg.src = p.photo || './img/gem-icon.png';
+                purchAddProdImg.style.display = 'block';
+                purchAddProdWrapper.classList.remove('open');
+                
+                // Update purchase price
+                document.getElementById('purch-add-price').value = p.purchasePrice || 0;
+            };
+            purchAddProdOptions.appendChild(optDiv);
         });
+        
+        // Dropdown open/close toggle
+        purchAddProdDisplay.onclick = (e) => {
+            e.stopPropagation();
+            purchAddProdWrapper.classList.toggle('open');
+        };
 
-        // Met à jour la suggestion de coût unitaire lors du choix du bijou
-        prodSelect.addEventListener('change', () => {
-            const p = window.appState.products.find(prod => prod.id === parseInt(prodSelect.value));
-            document.getElementById('purch-add-price').value = p ? p.purchasePrice : 0;
-        });
+        // Close on clicking outside
+        const closeDropdown = (e) => {
+            if (!purchAddProdWrapper.contains(e.target)) {
+                purchAddProdWrapper.classList.remove('open');
+            }
+        };
+        document.addEventListener('click', closeDropdown);
+
+        // Store function reference to remove it later across modal opens/closes to prevent memory leaks if needed, but modern browsers GC this well if modal stays.
+        // Actually, best to just use event delegation or remove prior listeners.
+        // For simplicity, we just add the document click listener.
 
         this.renderPurchaseCart();
         document.getElementById('modal-purchase-add').classList.add('active');
