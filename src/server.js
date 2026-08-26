@@ -240,9 +240,28 @@ app.put('/api/products/:id', requireAuth, requireRole(['Administrateur', 'Compta
     const oldProduct = db.findOne('products', p => p.id === id);
     if (!oldProduct) return res.status(404).json({ error: 'Produit non trouvé' });
 
-    const { name, categoryId, description, photo, supplierId, purchasePrice, sellPriceRecommended, sellPriceActual, minStock, material, color, size, brand, status } = req.body;
+    const { name, categoryId, description, photo, supplierId, purchasePrice, sellPriceRecommended, sellPriceActual, minStock, material, color, size, brand, status, quantity } = req.body;
 
     db.transaction(() => {
+        let newQuantity = oldProduct.quantity;
+        if (quantity !== undefined) {
+            const parsedQty = parseInt(quantity);
+            if (!isNaN(parsedQty) && parsedQty !== oldProduct.quantity) {
+                newQuantity = parsedQty;
+                const diff = newQuantity - oldProduct.quantity;
+                
+                db.insert('stock_movements', {
+                    productId: id,
+                    type: diff > 0 ? 'entrée' : 'sortie',
+                    reason: 'ajustement',
+                    quantity: Math.abs(diff),
+                    date: new Date().toISOString(),
+                    notes: 'Ajustement manuel de quantité depuis la fiche produit',
+                    userId: req.session.user.id
+                });
+            }
+        }
+
         const updated = db.update('products', id, {
             name: name ?? oldProduct.name,
             categoryId: categoryId !== undefined ? (parseInt(categoryId) || null) : oldProduct.categoryId,
@@ -253,6 +272,7 @@ app.put('/api/products/:id', requireAuth, requireRole(['Administrateur', 'Compta
             sellPriceRecommended: sellPriceRecommended !== undefined ? parseFloat(sellPriceRecommended) : oldProduct.sellPriceRecommended,
             sellPriceActual: sellPriceActual !== undefined ? parseFloat(sellPriceActual) : oldProduct.sellPriceActual,
             minStock: minStock !== undefined ? parseInt(minStock) : oldProduct.minStock,
+            quantity: newQuantity,
             material: material ?? oldProduct.material,
             color: color ?? oldProduct.color,
             size: size ?? oldProduct.size,
